@@ -1,17 +1,37 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <div v-if="isError">Error</div>
+    <div v-else-if="isLoading">Loading...</div>
+    <div v-else>{{ data }}</div>
+
+    <button @click="invalidateQuery">Invalidate</button>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import { useQueryProvider, useQuery, useQueryClient } from "vue-query";
+import { ref, reactive } from "@vue/composition-api";
+
+const mockApi = () => {
+  return new Promise(resolve => {
+    setTimeout(() => resolve('test'), 500);
+  });
+};
 
 export default {
   name: 'App',
-  components: {
-    HelloWorld
+
+  setup() {
+    useQueryProvider();
+    const queryClient = useQueryClient();
+
+    const page = ref(1);
+    const queryKey = reactive(['test', { page }]);
+    const { data, isLoading, isError } = useQuery(queryKey, mockApi);
+
+    const invalidateQuery = () => queryClient.invalidateQueries(queryKey, { exact: true, active: true });
+
+    return { data, isLoading, isError, invalidateQuery };
   }
 }
 </script>
